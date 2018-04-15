@@ -1,7 +1,6 @@
 package com.example.sony.bpos50;
 
 import android.os.Message;
-import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -11,13 +10,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 
 public class UdpClientThread extends Thread{
-
+    MainActivity mainactivity;
     ListRoute listRoute;
     String dstAddress;
     int dstPort;
     private boolean running;
     ListRoute.UdpClientHandler handler;
-
+    MainActivity.UdpClientHandler handler2;
     DatagramSocket socket;
     InetAddress address;
 
@@ -29,15 +28,24 @@ public class UdpClientThread extends Thread{
         listRoute=new ListRoute();
     }
 
+    public UdpClientThread(String addr, int port, MainActivity.UdpClientHandler handler) {
+        super();
+        dstAddress = addr;
+        dstPort = port;
+        this.handler2 = handler;
+        mainactivity=new MainActivity();
+    }
+
+
     public void setRunning(boolean running){
         this.running = running;
     }
 
-    private void sendState(String state){
-        handler.sendMessage(
-                Message.obtain(handler,
-                        ListRoute.UdpClientHandler.UPDATE_STATE, state));
-    }
+    //private void sendState(String state){
+      //  handler.sendMessage(
+        //        Message.obtain(handler,
+          //              ListRoute.UdpClientHandler.UPDATE_STATE, state));
+    //}
 
     @Override
     public void run() {
@@ -92,15 +100,40 @@ public class UdpClientThread extends Thread{
 
             // get response
             //packet = new DatagramPacket(buf, buf.length);
-            String messageStr=listRoute.Buffer;
-            int server_port = 9999;
+            String messageStr="";
+            if(listRoute.Buffer_ListRoute_Control==1){
+                messageStr=listRoute.Buffer_ListRoute;
+                listRoute.Buffer_ListRoute_Control=0;
+                int server_port = 9999;
+                DatagramSocket s = new DatagramSocket();
+                InetAddress local = InetAddress.getByName("192.168.1.25");
+                int msg_length=messageStr.length();
+                byte[] message = messageStr.getBytes();
+                DatagramPacket p = new DatagramPacket(message, msg_length,local,server_port);
+                s.send(p);
+                s.close(); //I added
+            }
+            else if(mainactivity.Buffer_MainActivity_Control==1){
+                messageStr=mainactivity.Buffer_MainActivity;
+                mainactivity.Buffer_MainActivity_Control=0;
+                int server_port = 9999;
+                DatagramSocket s = new DatagramSocket();
+                InetAddress local = InetAddress.getByName("192.168.1.25");
+                int msg_length=messageStr.length();
+                byte[] message = messageStr.getBytes();
+                DatagramPacket p = new DatagramPacket(message, msg_length,local,server_port);
+                s.send(p);
+                s.close(); //I added
+            }
+
+            /*int server_port = 9999;
             DatagramSocket s = new DatagramSocket();
             InetAddress local = InetAddress.getByName("192.168.1.25");
             int msg_length=messageStr.length();
             byte[] message = messageStr.getBytes();
             DatagramPacket p = new DatagramPacket(message, msg_length,local,server_port);
             s.send(p);
-            s.close(); //I added
+            s.close(); *///I added
             //socket.receive(packet);
             //String line = new String(packet.getData(), 0, packet.getLength());
             //handler.sendMessage(

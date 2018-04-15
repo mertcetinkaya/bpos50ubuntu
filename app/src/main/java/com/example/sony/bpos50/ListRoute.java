@@ -3,37 +3,21 @@ package com.example.sony.bpos50;
 
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.RequiresPermission;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.ToggleButton;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.*;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 //import java.net.Socket;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+
 //import java.io.BufferedWriter;
 //import java.io.OutputStreamWriter;
 
@@ -58,8 +42,8 @@ public class ListRoute extends AppCompatActivity {
     List<String> BeverageList = new ArrayList<String>(2);
     List<String> LegumesList = new ArrayList<String>(2);
     List<String> Route = new ArrayList<String>(3);
-    static String Buffer="";
-
+    static String Buffer_ListRoute ="";
+    static int Buffer_ListRoute_Control=0;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.list_route);
@@ -124,6 +108,7 @@ public class ListRoute extends AppCompatActivity {
                     if(i<(Route.size()-1))
                         WriteRouteText.append(", ");
                 }
+
             }
         });
 
@@ -132,18 +117,18 @@ public class ListRoute extends AppCompatActivity {
             public void onClick(View arg0) {
 
                 try{
-                    Buffer="";
+                    Buffer_ListRoute ="";
                     if(Route.contains("Chocolate"))
-                        Buffer+="1";
+                        Buffer_ListRoute +="1";
                     if(Route.contains("Beverage"))
-                        Buffer+="2";
+                        Buffer_ListRoute +="2";
                     if(Route.contains("Legumes"))
-                        Buffer+="3";
+                        Buffer_ListRoute +="3";
               /*      Socket sock = new Socket("192.168.1.25", 1234);
                     WriteRouteText.append("socketerror2");
                     OutputStreamWriter osw = new OutputStreamWriter(sock.getOutputStream());
                     BufferedWriter bw = new BufferedWriter(osw);
-                    String sendMessage = Buffer;
+                    String sendMessage = Buffer_ListRoute;
                     bw.write(sendMessage);
                     bw.flush();
                     sock.close();*/
@@ -158,6 +143,7 @@ public class ListRoute extends AppCompatActivity {
                     s.send(p);
 
 */
+                    Buffer_ListRoute_Control=1;
                     udpClientThread = new UdpClientThread(
                            "192.168.1.25",
                             Integer.parseInt("9999"),
@@ -172,7 +158,7 @@ public class ListRoute extends AppCompatActivity {
             }
         });
         /*try {
-            udpClientThread.sendMessage(Buffer);
+            udpClientThread.sendMessage(Buffer_ListRoute);
         } catch (IOException e) {
             e.printStackTrace();
         }*/

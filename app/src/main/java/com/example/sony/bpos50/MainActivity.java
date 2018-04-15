@@ -14,6 +14,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -82,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Button ProductTakenBtn;
     boolean step_watched=false;
 
+    UdpClientHandler udpClientHandler;
+    UdpClientThread udpClientThread;
+
 
 
     //List<String> list_device_address_to_save = new ArrayList<String>(Arrays.asList ( "C9:00:6A:7D:EF:B8" , "C5:EC:3D:11:FB:31" , "CB:7F:3D:BD:0D:26", "FD:15:89:12:5C:2E" ));
@@ -100,7 +104,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final String TEXT_NUM_STEPS = "Steps Num: ";
     private int numSteps=0;
     private boolean tooglemap=false;
-
+    static int Buffer_MainActivity_Control=0;
+    static String Buffer_MainActivity ="";
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -127,7 +132,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 numSteps = 0;
                 sensorManager.registerListener(MainActivity.this, accel, SensorManager.SENSOR_DELAY_FASTEST);
                 sensorManager.registerListener(MainActivity.this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_FASTEST);
-
+                try{
+                    Buffer_MainActivity_Control=1;
+                    Buffer_MainActivity ="START";
+                    udpClientThread = new UdpClientThread(
+                            "192.168.1.25",
+                            Integer.parseInt("9999"),
+                            udpClientHandler);
+                    udpClientThread.start();
+                }
+                catch (Exception ex) {}
             }
         });
 
@@ -138,6 +152,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             public void onClick(View arg0) {
                 step_watched=false;
                 sensorManager.unregisterListener(MainActivity.this);
+                try{
+                    Buffer_MainActivity_Control=1;
+                    Buffer_MainActivity ="STOP";
+                    udpClientThread = new UdpClientThread(
+                            "192.168.1.25",
+                            Integer.parseInt("9999"),
+                            udpClientHandler);
+                    udpClientThread.start();
+                }
+                catch (Exception ex) {}
+
+            }
+        });
+
+
+
+        ProductTakenBtn.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                step_watched=false;
+                sensorManager.unregisterListener(MainActivity.this);
+                try{
+                    Buffer_MainActivity_Control=1;
+                    Buffer_MainActivity ="PRODUCT TAKEN";
+                    udpClientThread = new UdpClientThread(
+                            "192.168.1.25",
+                            Integer.parseInt("9999"),
+                            udpClientHandler);
+                    udpClientThread.start();
+                }
+                catch (Exception ex) {}
 
             }
         });
@@ -213,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         scanLeDevice(true);
 
 
-
+        udpClientHandler = new UdpClientHandler(this);
 
     }
 
@@ -371,6 +417,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                             reference_device_number = list_device_address_all_number.get(list_device_address_all.indexOf(reference_device));
                             present_reference = reference_device_number;
                             present_reference_index = list_device_address_all_number.indexOf(present_reference);
+
+                            if(reference_device_number.length()==2){
+                                try{
+                                    Buffer_MainActivity_Control=1;
+                                    Buffer_MainActivity =reference_device_number.substring(1);
+                                    udpClientThread = new UdpClientThread(
+                                            "192.168.1.25",
+                                            Integer.parseInt("9999"),
+                                            udpClientHandler);
+                                    udpClientThread.start();
+                                }
+                                catch (Exception ex) {}
+                            }
+
+
+
 
 /*
                         if(list_rssi.get(list_device_address.indexOf(list_device_address_all.get(present_reference_index))) >
@@ -643,6 +705,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             };
 
 
+    public static class UdpClientHandler extends Handler {
+        public static final int UPDATE_STATE = 0;
+        public static final int UPDATE_MSG = 1;
+        public static final int UPDATE_END = 2;
+        private MainActivity parent;
 
+        public UdpClientHandler(MainActivity parent) {
+            super();
+            this.parent = parent;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+
+            switch (msg.what){
+                case UPDATE_STATE:
+                    parent.updateState((String)msg.obj);
+                    break;
+                case UPDATE_MSG:
+                    parent.updateRxMsg((String)msg.obj);
+                    break;
+                case UPDATE_END:
+                    parent.clientEnd();
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+
+        }
+    }
+    private void updateState(String state){
+        // textViewState.setText(state);
+    }
+
+    private void updateRxMsg(String rxmsg){
+        //   textViewRx.append(rxmsg + "\n");
+    }
+
+    private void clientEnd(){
+        udpClientThread = null;
+        //  textViewState.setText("bu mertten");
+        //  buttonConnect.setEnabled(true);
+
+    }
 
 }
