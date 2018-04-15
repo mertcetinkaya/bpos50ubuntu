@@ -100,7 +100,7 @@ public class UdpClientThread extends Thread{
             byte[] message = messageStr.getBytes();
             DatagramPacket p = new DatagramPacket(message, msg_length,local,server_port);
             s.send(p);
-            s.close();
+            s.close(); //I added
             //socket.receive(packet);
             //String line = new String(packet.getData(), 0, packet.getLength());
             //handler.sendMessage(
